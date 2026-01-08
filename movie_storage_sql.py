@@ -44,9 +44,23 @@ def add_movie(title, year, rating):
 
 def delete_movie(title):
     """Delete a movie from the database."""
-    pass
+    with DATA_ENGINE.connect() as connection:
+        try:
+            connection.execute(text("DELETE FROM movies WHERE title = :title"),
+                               {"title": title})
+            connection.commit()
+            print(f"Movie '{title}' deleted successfully.")
+        except Exception as error:
+            print(f"Error: {error}")
 
 
 def update_movie(title, rating):
     """Update a movie's rating in the database."""
-    pass
+    with DATA_ENGINE.connect() as connection:
+        try:
+            connection.execute(text("UPDATE movies SET rating = :rating WHERE title = :title"),
+                               {"title": title, "rating": rating})
+            connection.commit()
+            print(f"Movie '{title}' deleted successfully.")
+        except Exception as error:
+            print(f"Error: {error}")
