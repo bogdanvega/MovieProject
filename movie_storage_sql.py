@@ -30,7 +30,7 @@ def list_movies():
     return {row[0]: {"year": row[1], "rating": row[2]} for row in movies}
 
 
-def add_movie(title, year, rating):
+def add_movie_to_storage(title, year, rating):
     """Add a new movie to the database."""
     with DATA_ENGINE.connect() as connection:
         try:
@@ -42,7 +42,7 @@ def add_movie(title, year, rating):
             print(f"Error: {error}")
 
 
-def delete_movie(title):
+def delete_movie_from_storage(title):
     """Delete a movie from the database."""
     with DATA_ENGINE.connect() as connection:
         try:
@@ -54,7 +54,7 @@ def delete_movie(title):
             print(f"Error: {error}")
 
 
-def update_movie(title, rating):
+def update_movie_from_storage(title, rating):
     """Update a movie's rating in the database."""
     with DATA_ENGINE.connect() as connection:
         try:
@@ -64,3 +64,12 @@ def update_movie(title, rating):
             print(f"Movie '{title}' updated successfully.")
         except Exception as error:
             print(f"Error: {error}")
+
+
+def is_movie_in_storage(title):
+    """ Finds if a movie is in database """
+    movies = list_movies()
+    for movie in movies.keys():
+        if movie == title:
+            return True
+    return False

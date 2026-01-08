@@ -1,15 +1,14 @@
 import random
 from statistics import mean, median, StatisticsError
-import movie_storage
-from movie_storage import get_movies
+import movie_storage_sql as storage
 
 
 def print_all_movies():
-    """ Displaying the total number of movies and every movie in the database """
-    movies = get_movies()
-    print(f"\n{len(movies)} movies in total")
-    for movie in movies:
-        print(f"{movie['name']} ({movie['year']}): {movie['rating']}")
+    """ Retrieve and display all movies from the database. """
+    movies = storage.list_movies()
+    print(f"\n{len(movies)} movie(s) in total")
+    for movie, data in movies.items():
+        print(f"{movie} ({data['year']}): {data['rating']}")
 
 
 def is_movie_rating_valid(movie_rating):
@@ -37,7 +36,7 @@ def get_movie_name():
     """
     while True:
         movie_name = input("\nEnter new movie name: ")
-        if movie_storage.is_movie_in_storage(movie_name):
+        if storage.is_movie_in_storage(movie_name):
             print(f"Movie {movie_name} already exists!")
             continue
         if movie_name.isspace() or movie_name == "":
@@ -82,7 +81,7 @@ def add_movie():
     new_movie_year = get_movie_year()
     new_movie_rating = get_movie_rating()
 
-    movie_storage.add_movie_to_storage(new_movie_name, new_movie_year, new_movie_rating)
+    storage.add_movie_to_storage(new_movie_name, new_movie_year, new_movie_rating)
     print(f"Movie {new_movie_name} successfully added")
 
 def delete_movie():
@@ -90,13 +89,12 @@ def delete_movie():
     Then calls the function that deletes the movie from the database.
     """
     while True:
-        movie_name_to_delete = input("\nEnter movie name to delete: ")
-        if not movie_storage.is_movie_in_storage(movie_name_to_delete):
-            print(f"Movie {movie_name_to_delete} doesn't exist!")
+        movie_title_to_delete = input("\nEnter movie name to delete: ")
+        if not storage.is_movie_in_storage(movie_title_to_delete):
+            print(f"Movie {movie_title_to_delete} doesn't exist!")
             break
-        movie_storage.delete_movie_from_storage(movie_name_to_delete)
-        print(f"Movie {movie_name_to_delete} successfully deleted")
-        break
+        storage.delete_movie_from_storage(movie_title_to_delete)
+        print(f"Movie {movie_title_to_delete} successfully deleted")
 
 
 def update_movie():
@@ -108,7 +106,7 @@ def update_movie():
     print()
     movie_name_to_update = input("Enter movie name: ")
     while True:
-        if not movie_storage.is_movie_in_storage(movie_name_to_update):
+        if not storage.is_movie_in_storage(movie_name_to_update):
             print(f"Movie {movie_name_to_update} doesn't exist!")
             break
         new_movie_rating = input("Enter new movie rating (0-10): ")
@@ -117,7 +115,7 @@ def update_movie():
                 print("Please enter a valid rating")
                 continue
             rating = float(new_movie_rating)
-            movie_storage.update_movie_from_storage(movie_name_to_update, rating)
+            storage.update_movie_from_storage(movie_name_to_update, rating)
             print(f"Movie {movie_name_to_update} successfully updated")
             break
         except ValueError:
@@ -125,72 +123,48 @@ def update_movie():
 
 def get_average_rating():
     """ Function that returns the average rating of the list of movies."""
-    movies = get_movies()
+    movies = storage.list_movies()
 
     try:
-        return mean(movie['rating'] for movie in movies)
+        return mean(data['rating'] for movie, data in movies.items())
     except StatisticsError:
         return "0 : There are no movies in the database."
 
 
 def get_median_rating():
     """ Function that returns the median rating of the list of movies. """
-    movies = get_movies()
+    movies = storage.list_movies()
 
-    movies_sorted = sorted(movies, key=lambda movie: movie['rating'])
     try:
-        return median(movie['rating'] for movie in movies_sorted)
+        return median([data["rating"] for data in movies.values()])
     except StatisticsError:
         return "0 : There are no movies in the database."
 
 
 def get_best_movies():
-    """ Returning the best movie/movies.
-    First, the list is sorted by rating, the best being the first one.
-    Max rating is initialized with the rating of the first movie.
-    Then we are looping through the movies, and we add all the movies
-    with the max rating to a list. When a movie that has a rating
-    lower than the max rating is reached, we exit the loop.
     """
-    movies = get_movies()
+    The movies are sorted by rating, the best being the first one.
+    Return: the best movie/movies list.
+    """
+    movies = storage.list_movies()
 
-    movies_sorted = sorted(movies, key=lambda m: m['rating'], reverse=True)
-    max_rating = movies_sorted[0]['rating']
-
-    list_of_best_movies = []
-    for movie in movies_sorted:
-        if movie['rating'] == max_rating:
-            list_of_best_movies.append(movie)
-        else:
-            break
-    return list_of_best_movies
+    movies_sorted = sorted(movies.items(), key=lambda item: item[1]['rating'], reverse=True)
+    return list(movies_sorted)
 
 
 def get_worst_movies():
     """
-    Returning the worst movie/movies.
-    First, the list is sorted by rating, the worst being the first one.
-    Min rating is initialized with the rating of the first movie.
-    Then we are looping through the movies, and we add all the movies
-    with the min rating to a list. When a movie that has a rating
-    higher than the min rating is reached, we exit the loop.
+    The movies are sorted by rating, the worst being the first one.
+    Return: the worst movie/movies list.
     """
-    movies = get_movies()
+    movies = storage.list_movies()
 
-    movies_sorted = sorted(movies, key=lambda m: m['rating'])
-    min_rating = movies_sorted[0]['rating']
-
-    list_of_worst_movies = []
-    for movie in movies_sorted:
-        if movie['rating'] == min_rating:
-            list_of_worst_movies.append(movie)
-        else:
-            break
-    return list_of_worst_movies
+    movies_sorted = sorted(movies.items(), key=lambda item: item[1]['rating'])
+    return list(movies_sorted)
 
 
 def print_movie_database_stats():
-    """ Function that displays the list of movies stats:
+    """ Function that displays the stats from the list of movies :
     Average rating, Median rating, Best movie(s) and Worst movie(s). """
 
     print()
@@ -199,49 +173,47 @@ def print_movie_database_stats():
 
     label_best_movies = "Best movie(s): "
     print(label_best_movies, end="")
-    for i, movie in enumerate(get_best_movies()):
+    for i, (movie, data) in enumerate(get_best_movies()):
         if i == 0:
-            print(f"{movie['name']} ({movie['year']}): {movie['rating']}")
+            print(f"{movie} ({data['year']}): {data['rating']}")
         else:
             print(" " * len(label_best_movies)
-                  + f"{movie['name']} ({movie['year']}): {movie['rating']}")
+                  + f"{movie} ({data['year']}): {data['rating']}")
 
     label_worst_movies = "Worst movie(s): "
     print(label_worst_movies, end="")
-    for i, movie in enumerate(get_worst_movies()):
+    for i, (movie, data) in enumerate(get_worst_movies()):
         if i == 0:
-            print(f"{movie['name']} ({movie['year']}): {movie['rating']}")
+            print(f"{movie} ({data['year']}): {data['rating']}")
         else:
             print(" " * len(label_worst_movies)
-                  + f"{movie['name']} ({movie['year']}): {movie['rating']}")
-
+                  + f"{movie} ({data['year']}): {data['rating']}")
 
 def print_random_movie():
     """ Function that displays a randomly selected movie """
-    movies = get_movies()
+    movies = list(storage.list_movies().items())
 
-    movie_choice = random.choice(movies)
-    print(f"Your movie for tonight: {movie_choice['name']} "
-          f"({movie_choice['year']}), it's rated {movie_choice['rating']}")
+    title, data = random.choice(movies)
+    print(f"Your movie for tonight: {title} "
+          f"({data['year']}), it's rated {data['rating']}")
 
 
 def print_searched_movie():
     """ Function that displays the movies that matches the part of
     a movie title provided by the user. """
-    movies = get_movies()
+    movies = storage.list_movies()
 
     part_of_movie_name = input("\nEnter part of movie name: ")
-    for movie in movies:
-        if part_of_movie_name.lower() in movie['name'].lower():
-            print(f"{movie['name']} ({movie['year']}), {movie['rating']}")
+    for title, data in movies.items():
+        if part_of_movie_name.lower() in title.lower():
+            print(f"{title} ({data['year']}), {data['rating']}")
 
 
 def print_movies_sorted_by_rating():
     """ Function that displays the database movies sorted by rating. """
-    movies = get_movies()
+    movies = storage.list_movies()
 
     print()
-    movies_sorted = sorted(movies, key=lambda m: m['rating'], reverse=True)
-    for movie in movies_sorted:
-        print(f"{movie['name']} "
-              f"({movie['year']}): {movie['rating']}")
+    movies_sorted = sorted(movies.items(), key=lambda item: item[1]['rating'], reverse=True)
+    for title, data in movies_sorted:
+        print(f"{title} ({data['year']}): {data['rating']}")
