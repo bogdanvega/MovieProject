@@ -1,5 +1,5 @@
-import handle_movies
-from movies_web_generator import generate_website
+from movie_handles import handle_movies
+from html_handles.movies_web_generator import generate_website
 
 def print_main_menu():
     """ Function that displays the main menu. """

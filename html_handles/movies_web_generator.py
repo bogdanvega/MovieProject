@@ -1,5 +1,5 @@
-from handle_html_file import load_html_data, create_html_file
-from movie_storage_sql import list_movies
+from html_handles.handle_html_file import load_html_data, create_html_file
+from movie_storage.movie_storage_sql import list_movies
 
 WEBSITE_TITLE = "BOGDAN'S MOVIE APP"
 
@@ -44,9 +44,9 @@ def generate_website():
         movies information.
         Then calls the function to generate the new html file with movies information.
     """
-    html_template = load_html_data("index_template.html")
+    html_template = load_html_data("templates/index_template.html")
     movies_information = format_movies_html()
     new_html_content = html_template.replace('__TEMPLATE_TITLE__', WEBSITE_TITLE)
     new_html_content = new_html_content.replace('__TEMPLATE_MOVIE_GRID__', movies_information)
     create_html_file(new_html_content)
-    print("Website was successfully generated to the file index.html.")
+    print("Website was generated successfully.")

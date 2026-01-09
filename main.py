@@ -1,4 +1,5 @@
-import menu
+from movie_handles import menu
+
 
 def main():
     """ Main function"""
