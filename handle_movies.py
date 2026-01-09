@@ -43,7 +43,7 @@ def get_movie_name():
     """
     movie_name = input("\nEnter new movie name: ")
     if storage.is_movie_in_storage(movie_name):
-        print(f"Movie {movie_name} already exists!")
+        print(f"Movie {movie_name} is already in your database!")
         return 0
     if movie_name.isspace() or movie_name == "":
         print("Movie name must not be empty.")
@@ -84,36 +84,38 @@ def add_movie():
     Then fetches the movie data from the API and
     adds the movie into the database.
     """
-    new_movie_name = get_movie_name()
-    if new_movie_name == 0:
-        pass
-    else:
-        request_url = API_URL + f"t={new_movie_name}"
-        response = requests.get(request_url)
-        if response.status_code != requests.codes.ok:
-            print(f"Error: {response.status_code}, {response.text}")
+    try:
+        new_movie_name = get_movie_name()
+        if new_movie_name == 0: # case of movie already added or movie name empty
+            pass
         else:
-            movie_data = response.json()
-            if movie_data == {"Response": "False","Error": "Movie not found!"}:
-                print(f"The movie {new_movie_name} doesn't exist.")
+            request_url = API_URL + f"t={new_movie_name}"
+            response = requests.get(request_url)
+            if response.status_code != requests.codes.ok:
+                print(f"Error: {response.status_code}, {response.text}")
             else:
-                title = movie_data.get("Title")
-                year = movie_data.get("Year")
-                rating = movie_data.get("imdbRating")
-                poster_img_url = movie_data.get("Poster")
-                storage.add_movie_to_storage(title, year, rating, poster_img_url)
+                movie_data = response.json()
+                if movie_data == {"Response": "False","Error": "Movie not found!"}:
+                    print(f"The movie {new_movie_name} doesn't exist.")
+                else:
+                    title = movie_data.get("Title")
+                    year = movie_data.get("Year")
+                    rating = movie_data.get("imdbRating")
+                    poster_img_url = movie_data.get("Poster")
+                    storage.add_movie_to_storage(title, year, rating, poster_img_url)
+    except requests.exceptions.ConnectionError:
+        print("The internet connection is not working. Try again!")
+
 
 def delete_movie():
     """ Function that gets the name of the movie from the user.
     Then calls the function that deletes the movie from the database.
     """
-    while True:
-        movie_title_to_delete = input("\nEnter movie name to delete: ")
-        if not storage.is_movie_in_storage(movie_title_to_delete):
-            print(f"Movie {movie_title_to_delete} doesn't exist!")
-            break
+    movie_title_to_delete = input("\nEnter movie name to delete: ")
+    if not storage.is_movie_in_storage(movie_title_to_delete):
+        print(f"Movie {movie_title_to_delete} doesn't exist!")
+    else:
         storage.delete_movie_from_storage(movie_title_to_delete)
-        print(f"Movie {movie_title_to_delete} successfully deleted")
 
 
 def update_movie():
@@ -162,24 +164,46 @@ def get_median_rating():
 
 def get_best_movies():
     """
+    Returning the best movie/movies.
     The movies are sorted by rating, the best being the first one.
-    Return: the best movie/movies list.
+    Max rating is initialized with the rating of the first movie.
+    Then we are looping through the movies, and we add all the movies
+    with the max rating to a list. When a movie that has a rating
+    lower than the max rating is reached, we exit the loop.
     """
     movies = storage.list_movies()
 
     movies_sorted = sorted(movies.items(), key=lambda item: item[1]['rating'], reverse=True)
-    return list(movies_sorted)
+    max_rating = movies_sorted[0][1]['rating']
+    list_of_best_movies = []
+    for movie, data in movies_sorted:
+        if data['rating'] == max_rating:
+            list_of_best_movies.append((movie, data))
+        else:
+            break
+    return list_of_best_movies
 
 
 def get_worst_movies():
     """
+    Returning the worst movie/movies.
     The movies are sorted by rating, the worst being the first one.
-    Return: the worst movie/movies list.
+    Min rating is initialized with the rating of the first movie.
+    Then we are looping through the movies, and we add all the movies
+    with the min rating to a list. When a movie that has a rating
+    higher than the min rating is reached, we exit the loop.
     """
     movies = storage.list_movies()
 
     movies_sorted = sorted(movies.items(), key=lambda item: item[1]['rating'])
-    return list(movies_sorted)
+    min_rating = movies_sorted[0][1]['rating']
+    list_of_worst_movies = []
+    for movie, data in movies_sorted:
+        if data['rating'] == min_rating:
+            list_of_worst_movies.append((movie, data))
+        else:
+            break
+    return list_of_worst_movies
 
 
 def print_movie_database_stats():

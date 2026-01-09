@@ -48,8 +48,8 @@ def delete_movie_from_storage(title):
     """Delete a movie from the database."""
     with DATA_ENGINE.connect() as connection:
         try:
-            connection.execute(text("DELETE FROM movies WHERE title = :title"),
-                               {"title": title})
+            connection.execute(text("DELETE FROM movies WHERE lower(title) = :title"),
+                               {"title": title.lower()})
             connection.commit()
             print(f"Movie '{title}' deleted successfully.")
         except Exception as error:
