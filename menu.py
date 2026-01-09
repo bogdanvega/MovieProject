@@ -1,4 +1,5 @@
 import handle_movies
+from movies_web_generator import generate_website
 
 def print_main_menu():
     """ Function that displays the main menu. """
@@ -13,12 +14,13 @@ def print_main_menu():
     print("6. Random movie")
     print("7. Search movie")
     print("8. Movies sorted by rating")
+    print("9. Generate website")
     print()
 
 
 def get_user_choice():
     """ Function that returns the user choice. """
-    return input("Enter choice (0-8): ")
+    return input("Enter choice (0-9): ")
 
 
 def exit_app():
@@ -61,5 +63,6 @@ dispatch_table = {
     "5": handle_movies.print_movie_database_stats,
     "6": handle_movies.print_random_movie,
     "7": handle_movies.print_searched_movie,
-    "8": handle_movies.print_movies_sorted_by_rating
+    "8": handle_movies.print_movies_sorted_by_rating,
+    "9": generate_website
 }

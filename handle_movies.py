@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import random
 import requests
 from statistics import mean, median, StatisticsError
+
 import movie_storage_sql as storage
 
 load_dotenv()
