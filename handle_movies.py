@@ -3,13 +3,12 @@ from dotenv import load_dotenv
 import random
 import requests
 from statistics import mean, median, StatisticsError
-
 import movie_storage_sql as storage
 
 load_dotenv()
 
 API_KEY = os.getenv('API_KEY')
-API_URL = f"http://www.omdbapi.com/?apikey={API_KEY}&"
+API_URL = f"https://www.omdbapi.com/?apikey={API_KEY}&"
 
 def print_all_movies():
     """ Retrieve and display all movies from the database. """
