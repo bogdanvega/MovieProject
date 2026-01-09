@@ -1,7 +1,14 @@
+import os
+from dotenv import load_dotenv
 import random
+import requests
 from statistics import mean, median, StatisticsError
 import movie_storage_sql as storage
 
+load_dotenv()
+
+API_KEY = os.getenv('API_KEY')
+API_URL = f"http://www.omdbapi.com/?apikey={API_KEY}&"
 
 def print_all_movies():
     """ Retrieve and display all movies from the database. """
@@ -34,15 +41,14 @@ def get_movie_name():
     """ Function that gets the movie name from the user.
     Validates the input as well.
     """
-    while True:
-        movie_name = input("\nEnter new movie name: ")
-        if storage.is_movie_in_storage(movie_name):
-            print(f"Movie {movie_name} already exists!")
-            continue
-        if movie_name.isspace() or movie_name == "":
-            print("Movie name must not be empty.")
-            continue
-        return movie_name
+    movie_name = input("\nEnter new movie name: ")
+    if storage.is_movie_in_storage(movie_name):
+        print(f"Movie {movie_name} already exists!")
+        return 0
+    if movie_name.isspace() or movie_name == "":
+        print("Movie name must not be empty.")
+        return 0
+    return movie_name
 
 
 def get_movie_year():
@@ -74,15 +80,28 @@ def get_movie_rating():
 
 def add_movie():
     """
-    Function that gets the name, year and rating from the user.
-    Calls the function that saves the movie in the database.
+    Function that gets the title of the movie from the user.
+    Then fetches the movie data from the API and
+    adds the movie into the database.
     """
     new_movie_name = get_movie_name()
-    new_movie_year = get_movie_year()
-    new_movie_rating = get_movie_rating()
-
-    storage.add_movie_to_storage(new_movie_name, new_movie_year, new_movie_rating)
-    print(f"Movie {new_movie_name} successfully added")
+    if new_movie_name == 0:
+        pass
+    else:
+        request_url = API_URL + f"t={new_movie_name}"
+        response = requests.get(request_url)
+        if response.status_code != requests.codes.ok:
+            print(f"Error: {response.status_code}, {response.text}")
+        else:
+            movie_data = response.json()
+            if movie_data == {"Response": "False","Error": "Movie not found!"}:
+                print(f"The movie {new_movie_name} doesn't exist.")
+            else:
+                title = movie_data.get("Title")
+                year = movie_data.get("Year")
+                rating = movie_data.get("imdbRating")
+                poster_img_url = movie_data.get("Poster")
+                storage.add_movie_to_storage(title, year, rating, poster_img_url)
 
 def delete_movie():
     """ Function that gets the name of the movie from the user.

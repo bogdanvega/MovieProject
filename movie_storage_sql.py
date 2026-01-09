@@ -2,7 +2,8 @@ from sqlalchemy import create_engine, text
 
 # Define the database URL and database engine
 DB_URL = "sqlite:///movies.db"
-DATA_ENGINE = create_engine(DB_URL, echo=True)
+DATA_ENGINE = create_engine(DB_URL, echo=False)
+
 
 def set_up_database():
     """
@@ -15,7 +16,8 @@ def set_up_database():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT UNIQUE NOT NULL,
                 year INTEGER NOT NULL,
-                rating REAL NOT NULL
+                rating REAL NOT NULL,
+                poster_img_url TEXT
             )
         """))
         connection.commit()
@@ -24,18 +26,18 @@ def set_up_database():
 def list_movies():
     """Retrieve all movies from the database."""
     with DATA_ENGINE.connect() as connection:
-        result = connection.execute(text("SELECT title, year, rating FROM movies"))
+        result = connection.execute(text("SELECT title, year, rating, poster_img_url FROM movies"))
         movies = result.fetchall()
 
-    return {row[0]: {"year": row[1], "rating": row[2]} for row in movies}
+    return {row[0]: {"year": row[1], "rating": row[2], "poster_img_url": row[3]} for row in movies}
 
 
-def add_movie_to_storage(title, year, rating):
+def add_movie_to_storage(title, year, rating, poster_img_url):
     """Add a new movie to the database."""
     with DATA_ENGINE.connect() as connection:
         try:
-            connection.execute(text("INSERT INTO movies (title, year, rating) VALUES (:title, :year, :rating)"),
-                               {"title": title, "year": year, "rating": rating})
+            connection.execute(text("INSERT INTO movies (title, year, rating, poster_img_url) VALUES (:title, :year, :rating, :poster_img_url)"),
+                               {"title": title, "year": year, "rating": rating, "poster_img_url": poster_img_url})
             connection.commit()
             print(f"Movie '{title}' added successfully.")
         except Exception as error:
@@ -70,6 +72,6 @@ def is_movie_in_storage(title):
     """ Finds if a movie is in database """
     movies = list_movies()
     for movie in movies.keys():
-        if movie == title:
+        if movie.lower() == title.lower():
             return True
     return False
