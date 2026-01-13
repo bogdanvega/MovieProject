@@ -19,17 +19,13 @@ def print_all_movies():
 
 
 def is_movie_rating_valid(movie_rating):
-    """ Function that validates the movie rating """
-    if movie_rating.isdigit() and 0 <= int(movie_rating) <= 10:
-        return True
-    if "." in movie_rating:
-        split_rating = movie_rating.split(".")
-        if split_rating[0].isdigit() and split_rating[1].isdigit():
-            if float(movie_rating) < 0 or float(movie_rating) > 10:
-                return False
-            return True
+    """Validate movie rating (0–10, inclusive)."""
+    try:
+        rating = float(movie_rating)
+    except ValueError:
         return False
-    return False
+
+    return 0 <= rating <= 10
 
 
 def is_movie_year_valid(movie_year):
@@ -68,14 +64,12 @@ def get_movie_rating():
     Validates the input as well.
     """
     while True:
-        movie_rating = input("Enter new movie rating (0-10): ")
-        try:
-            if is_movie_rating_valid(movie_rating):
-                return movie_rating
-            print(f"Rating {movie_rating} is invalid.")
-            continue
-        except ValueError as error:
-            print(f"Rating {movie_rating} is invalid. Reason: {error}")
+        movie_rating = input("Enter new movie rating (0–10): ")
+
+        if is_movie_rating_valid(movie_rating):
+            return float(movie_rating)
+
+        print(f"Rating '{movie_rating}' is invalid.")
 
 
 def add_movie():
