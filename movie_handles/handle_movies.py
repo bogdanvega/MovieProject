@@ -141,7 +141,7 @@ def get_average_rating():
     movies = storage.list_movies()
 
     try:
-        return mean(data['rating'] for movie, data in movies.items())
+        return mean(float(data['rating']) for data in movies.values())
     except StatisticsError:
         return "0 : There are no movies in the database."
 
