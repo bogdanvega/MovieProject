@@ -36,8 +36,10 @@ def add_movie_to_storage(title, year, rating, poster_img_url):
     """Add a new movie to the database."""
     with DATA_ENGINE.connect() as connection:
         try:
-            connection.execute(text("INSERT INTO movies (title, year, rating, poster_img_url) VALUES (:title, :year, :rating, :poster_img_url)"),
-                               {"title": title, "year": year, "rating": rating, "poster_img_url": poster_img_url})
+            connection.execute(text("INSERT INTO movies (title, year, rating, poster_img_url) VALUES "
+                                    "(:title, :year, :rating, :poster_img_url)"),
+                               {"title": title, "year": year, "rating": float(rating), # enforce type
+                                    "poster_img_url": poster_img_url})
             connection.commit()
             print(f"Movie '{title}' added successfully.")
         except Exception as error:
